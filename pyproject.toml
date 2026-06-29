@@ -46,8 +46,12 @@ packages = ["ycpa"]
 # Build for Python 3.8–3.13; skip PyPy and 32-bit (Eigen/AVX complications)
 build = "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
 skip = "*-musllinux_i686 *_i686 *-win32 pp*"
-# Run tests after each wheel is installed (verifies fallback too)
-test-requires = "pytest"
+# Run a smoke test after each wheel: verify the wheel imports and core works,
+# without source-building heavy deps. test-pip-args forces prebuilt wheels only
+# (--only-binary) so pip never falls back to compiling scipy/pandas from source
+# inside the old manylinux2014 image (which lacks OpenBLAS/Fortran).
+test-requires = ["pytest", "numpy<2.1", "scipy<1.14", "pandas<2.3"]
+test-pip-args = "--only-binary=:all:"
 test-command = "pytest {project}/tests -q"
 build-verbosity = 1
 

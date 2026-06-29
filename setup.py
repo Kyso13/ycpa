@@ -53,24 +53,27 @@ class BuildExt(build_ext):
     def build_extensions(self):
         import platform as _plat
         ct = self.compiler.compiler_type
+        # Cross-compile-safe arch detection: ARCHFLAGS (set by cibuildwheel on macOS)
+        # takes priority over platform.machine(), which only reports the HOST cpu and
+        # is wrong when an arm64 wheel is cross-built on an x86_64 runner.
+        archflags = os.environ.get("ARCHFLAGS", "").lower()
         machine = _plat.machine().lower()
-        is_arm = machine in ("arm64", "aarch64")
-        is_x86 = machine in ("x86_64", "amd64", "i686", "x86")
+        is_arm = ("arm64" in archflags) or (not archflags and machine in ("arm64", "aarch64"))
+        is_x86 = ("x86_64" in archflags) or (not archflags and machine in ("x86_64", "amd64", "i686", "x86"))
         opts, link = [], []
 
         if ct == "unix":
             opts += ["-O3", "-std=c++17", "-fvisibility=hidden"]
 
             if sys.platform == "darwin":
-                # macOS: skip OpenMP entirely. Homebrew libomp linkage can break the
-                # arm64 (Apple Silicon) binary so delocate fails to find an arm64
-                # slice. The core runs correctly single-threaded without OpenMP;
-                # the real speedup comes from C++/Eigen, not OpenMP threads.
-                # Apple Silicon (ARM) -> NO AVX; SIMD flag only on x86 Macs.
-                if is_x86 and os.environ.get("YCPA_NATIVE") != "1":
-                    opts += ["-mavx2", "-mfma"]
-                elif os.environ.get("YCPA_NATIVE") == "1":
-                    opts += ["-mcpu=native"] if is_arm else ["-march=native"]
+                # macOS: do NOT force any SIMD/arch flag. cibuildwheel injects the
+                # correct -arch (x86_64 or arm64); Clang + Eigen auto-vectorize
+                # (AVX on Intel, NEON on Apple Silicon) at -O3 with zero extra flags.
+                # Forcing -mavx2 here leaked into arm64 cross-builds and produced a
+                # non-arm64 binary, which made delocate fail. OpenMP is also skipped
+                # (Homebrew libomp linkage can break the arm64 slice). Single-threaded
+                # is correct; the real speedup is C++/Eigen, not OpenMP.
+                pass
             else:
                 # Linux (gcc): OpenMP built in.
                 opts += ["-fopenmp"]; link += ["-fopenmp"]
