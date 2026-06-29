@@ -47,12 +47,13 @@ packages = ["ycpa"]
 build = "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
 skip = "*-musllinux_i686 *_i686 *-win32 pp*"
 # Run a smoke test after each wheel: verify the wheel imports and core works,
-# without source-building heavy deps. test-pip-args forces prebuilt wheels only
-# (--only-binary) so pip never falls back to compiling scipy/pandas from source
-# inside the old manylinux2014 image (which lacks OpenBLAS/Fortran).
-test-requires = ["pytest", "numpy<2.1", "scipy<1.14", "pandas<2.3"]
-test-pip-args = "--only-binary=:all:"
-test-command = "pytest {project}/tests -q"
+# without source-building heavy deps. The test-command reinstalls deps as
+# binary-only (--only-binary) with version caps so pip never falls back to
+# compiling scipy/pandas from source inside the old manylinux2014 image
+# (which lacks OpenBLAS/Fortran). Inlined here because the standalone
+# test-pip-args option is not supported in older cibuildwheel versions.
+test-requires = "pytest"
+test-command = "pip install --only-binary=:all: 'numpy<2.1' 'scipy<1.14' 'pandas<2.3' pytest && pytest {project}/tests -q"
 build-verbosity = 1
 
 [tool.cibuildwheel.linux]
