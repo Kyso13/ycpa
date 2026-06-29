@@ -28,8 +28,8 @@ dependencies = [
 dev = ["pytest>=7.0", "matplotlib"]
 
 [project.urls]
-Homepage = "https://github.com/USERNAME/ycpa"
-Repository = "https://github.com/USERNAME/ycpa"
+Homepage = "https://github.com/Kyso13/ycpa"
+Repository = "https://github.com/Kyso13/ycpa"
 
 [tool.setuptools]
 packages = ["ycpa"]
