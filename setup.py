@@ -62,15 +62,11 @@ class BuildExt(build_ext):
             opts += ["-O3", "-std=c++17", "-fvisibility=hidden"]
 
             if sys.platform == "darwin":
-                # macOS: clang does not accept bare -fopenmp; use libomp (Homebrew) flags.
-                # If OpenMP is absent, skip silently — the core runs single-threaded (still correct).
-                omp_prefix = (os.environ.get("YCPA_LIBOMP_PREFIX")
-                              or _brew_prefix("libomp"))
-                if omp_prefix:
-                    opts += ["-Xpreprocessor", "-fopenmp",
-                             f"-I{omp_prefix}/include"]
-                    link += [f"-L{omp_prefix}/lib", "-lomp"]
-                # Apple Silicon (ARM) → NO AVX; SIMD flag only on x86 Macs.
+                # macOS: skip OpenMP entirely. Homebrew libomp linkage can break the
+                # arm64 (Apple Silicon) binary so delocate fails to find an arm64
+                # slice. The core runs correctly single-threaded without OpenMP;
+                # the real speedup comes from C++/Eigen, not OpenMP threads.
+                # Apple Silicon (ARM) -> NO AVX; SIMD flag only on x86 Macs.
                 if is_x86 and os.environ.get("YCPA_NATIVE") != "1":
                     opts += ["-mavx2", "-mfma"]
                 elif os.environ.get("YCPA_NATIVE") == "1":

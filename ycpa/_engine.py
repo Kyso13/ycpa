@@ -29,6 +29,8 @@ Kullanım:
     python ycpa_p.py --data d.csv --multi_target Fy Fx --features fz ap ae --units Fy=N Fx=N
 """
 
+from __future__ import annotations
+
 import argparse, hashlib, itertools, math, os, re, warnings
 from fractions import Fraction
 

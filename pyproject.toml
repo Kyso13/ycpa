@@ -28,8 +28,8 @@ dependencies = [
 dev = ["pytest>=7.0", "matplotlib"]
 
 [project.urls]
-Homepage = "https://github.com/Kyso13/ycpa"
-Repository = "https://github.com/Kyso13/ycpa"
+Homepage = "https://github.com/USERNAME/ycpa"
+Repository = "https://github.com/USERNAME/ycpa"
 
 [tool.setuptools]
 packages = ["ycpa"]
@@ -64,12 +64,14 @@ environment = { EIGEN_INCLUDE_DIR = "/tmp/eigen/include/eigen3" }
 
 [tool.cibuildwheel.macos]
 # macOS: clang supports OpenMP via libomp (Homebrew) — install it, then Eigen.
-before-all = "brew install libomp || true; bash {project}/scripts/install_eigen.sh"
+before-all = "bash {project}/scripts/install_eigen.sh"
 environment = { EIGEN_INCLUDE_DIR = "/tmp/eigen/include/eigen3", MACOSX_DEPLOYMENT_TARGET = "10.14" }
 
 [tool.cibuildwheel.windows]
 before-all = "bash {project}/scripts/install_eigen.sh"
-environment = { EIGEN_INCLUDE_DIR = "C:/eigen/include/eigen3" }
+# PYTHONUTF8=1 forces UTF-8 so delvewheel can read source files containing
+# math symbols (·, ², √, etc.) without a cp1252 UnicodeDecodeError.
+environment = { EIGEN_INCLUDE_DIR = "C:/eigen/include/eigen3", PYTHONUTF8 = "1" }
 # On Windows the OpenMP DLL (vcomp140.dll ships with MSVC; no bundling needed) —
 # still use delvewheel to bundle the extension DLL dependencies into the wheel.
 before-build = "pip install delvewheel"
